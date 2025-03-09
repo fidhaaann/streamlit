@@ -32,7 +32,7 @@ st.markdown("<h1 style='text-align: center; color: white;'>🇮🇳 Indian Crick
 st.markdown("<p style='text-align: center; color: white;'>A Tribute to India's Cricketing Legacy from 1983 Onwards</p>", unsafe_allow_html=True)
 
 # Load Trophy Images
-def display_trophy(image_path, title):
+def display_trophy(images, title):
     col1, col2, col3 = st.columns([1, 3, 1])
     with col2:
         st.image(image_path, caption=title, use_column_width=True)
@@ -48,7 +48,7 @@ def display_player(image_path, name, description):
 # Section 1: Trophies Won by India
 st.markdown("## 🏆 Trophies Won by India")
 
-display_trophy("images/1983_wc.jpg", "🏆 1983 Cricket World Cup")
+display_trophy("worldcup1983.jpeg", "🏆 1983 Cricket World Cup")
 display_trophy("images/2007_t20.jpg", "🏆 2007 ICC T20 World Cup")
 display_trophy("images/2011_wc.jpg", "🏆 2011 Cricket World Cup")
 display_trophy("images/2013_ct.jpg", "🏆 2013 ICC Champions Trophy")
