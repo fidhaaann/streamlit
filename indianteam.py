@@ -62,4 +62,4 @@ display_player("images/kohli.jpg", "Virat Kohli", "One of the best modern-day ba
 display_player("images/yuvraj.jpg", "Yuvraj Singh", "Hero of the 2011 World Cup, famous for hitting 6 sixes in an over.")
 
 time.sleep(1)
-st.success("Enjoy exploring Indian Cricket's journey! 🏏")
+
