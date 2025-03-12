@@ -58,7 +58,7 @@ st.markdown("## 🌟 Legendary Performers")
 
 display_player("images/sachin.jpg", "Sachin Tendulkar", "The 'God of Cricket' and India's highest run-scorer in history.")
 display_player("images/dhoni.jpg", "MS Dhoni", "Captain Cool who led India to 3 ICC titles including the 2011 World Cup.")
-display_player("images/kohli.jpg", "Virat Kohli", "One of the best modern-day batsmen with immense passion and records.")
+display_player("images/kohli.jpg", "Virat Kohli", "One of the best modern-day batsmen with immense passion and records.who is called the run machine")
 display_player("images/yuvraj.jpg", "Yuvraj Singh", "Hero of the 2011 World Cup, famous for hitting 6 sixes in an over.")
 
 time.sleep(1)
