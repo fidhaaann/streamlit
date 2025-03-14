@@ -1,65 +1,138 @@
 import streamlit as st
 import requests
-import json
-import time
-from streamlit_lottie import st_lottie
-from PIL import Image
-import base64
+import pandas as pd
+import matplotlib.pyplot as plt
 
-# Load Lottie Animations
-def load_lottieurl(url):
-    r = requests.get(url)
-    if r.status_code != 200:
-        return None
-    return r.json()
+# Set page config
+st.set_page_config(page_title='Indian Cricket Live Updates', layout='wide')
 
-# Set Page Config
-st.set_page_config(page_title="Indian Cricket Showcase", page_icon="🏏", layout="wide")
+# API Key (Replace with your own API key from CricAPI)
+API_KEY = "d5dddc24-49e5-4e7d-8de6-040bd04a3ec6"
+BASE_URL = "https://api.cricapi.com/v1/"
 
-# Load Background CSS with Particle Effects
-page_bg = f'''
-<style>
-[data-testid="stAppViewContainer"] {{
-    background: url("https://wallpaperaccess.com/full/2078822.jpg") no-repeat center center fixed;
-    background-size: cover;
-}}
-</style>
-'''
-st.markdown(page_bg, unsafe_allow_html=True)
+# Custom CSS for styling
+st.markdown("""
+    <style>
+        body {
+            background-color: #ffffff;
+        }
+        .main-title {
+            text-align: center;
+            font-size: 36px;
+            color: #1e90ff;
+            font-weight: bold;
+        }
+        .sub-title {
+            font-size: 24px;
+            color: #1e90ff;
+        }
+        .highlight {
+            background-color: #1e90ff;
+            padding: 10px;
+            border-radius: 10px;
+            color: white;
+            text-align: center;
+            font-weight: bold;
+        }
+    </style>
+""", unsafe_allow_html=True)
 
-# Title and Description
-st.markdown("<h1 style='text-align: center; color: white;'>🇮🇳 Indian Cricket Showcase 🏏</h1>", unsafe_allow_html=True)
-st.markdown("<p style='text-align: center; color: white;'>A Tribute to India's Cricketing Legacy from 1983 Onwards</p>", unsafe_allow_html=True)
+# Sidebar Navigation
+st.sidebar.title("🏏 Indian Cricket Dashboard")
+page = st.sidebar.radio("Select a page", ["Live Updates", "Player Stats", "Achievements", "Top Performers"])
 
-# Load Trophy Images
-def display_trophy(images, title):
-    col1, col2, col3 = st.columns([1, 3, 1])
-    with col2:
-        st.image(image_path, caption=title, use_column_width=True)
+# Live Updates Page
+def live_updates():
+    st.markdown("<h1 class='main-title'>Live Match Updates</h1>", unsafe_allow_html=True)
+    
+    # Fetch Live Matches
+    response = requests.get(f"{BASE_URL}currentMatches?apikey={API_KEY}")
+    if response.status_code == 200:
+        data = response.json()
+        if 'data' in data:
+            matches = [match for match in data['data'] if "India" in match.get('teams', [])]
+            if matches:
+                for match in matches:
+                    st.markdown(f"**{match['name']}**")
+                    st.write(f"Status: {match.get('status', 'Unknown')}")
+                    st.write(f"Score: {match.get('score', 'N/A')}")
+                    st.write("---")
+            else:
+                st.warning("No live matches found for India.")
+        else:
+            st.error("Invalid data format received.")
+    else:
+        st.error("Failed to fetch live updates. Try again later.")
 
-def display_player(image_path, name, description):
-    col1, col2 = st.columns([1, 3])
-    with col1:
-        st.image(image_path, width=150)
-    with col2:
-        st.markdown(f"### {name}")
-        st.write(description)
+# Player Stats Page
+def player_stats():
+    st.markdown("<h1 class='main-title'>Player Statistics</h1>", unsafe_allow_html=True)
+    
+    player_name = st.text_input("Enter Player Name", "Virat Kohli")
+    if st.button("Get Stats"):
+        response = requests.get(f"{BASE_URL}playerStats?apikey={API_KEY}&name={player_name}")
+        if response.status_code == 200:
+            data = response.json()
+            if 'data' in data and data['data']:
+                player = data['data'][0]
+                st.write(f"### {player['name']}")
+                stats = {
+                    "Matches": player.get("matches", "N/A"),
+                    "Runs": player.get("runs", "N/A"),
+                    "Wickets": player.get("wickets", "N/A"),
+                    "Average": player.get("average", "N/A")
+                }
+                df = pd.DataFrame(stats.items(), columns=["Stat", "Value"])
+                st.table(df)
+                
+                # Generate sample data for visualization
+                years = list(range(2010, 2024))  # Example years
+                runs = [player.get("runs", 0) // len(years) for _ in years]  # Sample data
+                wickets = [player.get("wickets", 0) // len(years) for _ in years]  # Sample data
+                
+                fig, ax = plt.subplots()
+                ax.plot(years, runs, label="Runs", marker="o")
+                ax.plot(years, wickets, label="Wickets", marker="s", linestyle="dashed")
+                ax.set_xlabel("Year")
+                ax.set_ylabel("Performance")
+                ax.set_title(f"Performance Analysis of {player_name}")
+                ax.legend()
+                st.pyplot(fig)
+                
+            else:
+                st.warning("Player not found.")
+        else:
+            st.error("Failed to fetch player stats. Check API response.")
 
-# Section 1: Trophies Won by India
-st.markdown("## 🏆 Trophies Won by India")
+# Achievements Page
+def achievements():
+    st.markdown("<h1 class='main-title'>Team Achievements</h1>", unsafe_allow_html=True)
+    achievements = ["ICC Cricket World Cup - 1983, 2011", "ICC T20 World Cup - 2007", "Champions Trophy - 2002, 2013"]
+    for trophy in achievements:
+        st.markdown(f"<div class='highlight'>{trophy}</div>", unsafe_allow_html=True)
+    
+    # Image placeholder (Replace path with actual image path)
+    st.image("path_to_trophy_image.jpg", caption="Team India's Achievements")
 
-display_trophy("worldcup1983.jpeg", "🏆 1983 Cricket World Cup")
-display_trophy("images/2007_t20.jpg", "🏆 2007 ICC T20 World Cup")
-display_trophy("images/2011_wc.jpg", "🏆 2011 Cricket World Cup")
-display_trophy("images/2013_ct.jpg", "🏆 2013 ICC Champions Trophy")
+# Top Performers Page
+def top_performers():
+    st.markdown("<h1 class='main-title'>Top Performers</h1>", unsafe_allow_html=True)
+    
+    data = {"Player": ["Virat Kohli", "Rohit Sharma", "Jasprit Bumrah"], "Performance": ["1200 Runs", "1000 Runs", "50 Wickets"]}
+    df = pd.DataFrame(data)
+    st.table(df)
+    
+    # Image placeholder (Replace path with actual image path)
+    st.image("path_to_top_performers.jpg", caption="Top Performers of India")
 
-# Section 2: Legendary Players
-st.markdown("## 🌟 Legendary Performers")
+# Routing Pages
+if page == "Live Updates":
+    live_updates()
+elif page == "Player Stats":
+    player_stats()
+elif page == "Achievements":
+    achievements()
+elif page == "Top Performers":
+    top_performers()
 
-display_player("images/sachin.jpg", "Sachin Tendulkar", "The 'God of Cricket' and India's highest run-scorer in history.")
-display_player("images/dhoni.jpg", "MS Dhoni", "Captain Cool who led India to 3 ICC titles including the 2011 World Cup.")
-display_player("images/kohli.jpg", "Virat Kohli", "One of the best modern-day batsmen with immense passion and records.who is called the run machine")
-display_player("images/yuvraj.jpg", "Yuvraj Singh", "Hero of the 2011 World Cup, famous for hitting 6 sixes in an over.")
 
-time.sleep(1)
-st.success("Enjoy exploring Indian Cricket's journey! 🏏")
