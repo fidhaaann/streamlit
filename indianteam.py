@@ -6,9 +6,16 @@ import matplotlib.pyplot as plt
 # Set page config
 st.set_page_config(page_title='Indian Cricket Live Updates', layout='wide')
 
-# API Key (Replace with your own API key from CricAPI)
-API_KEY = "d5dddc24-49e5-4e7d-8de6-040bd04a3ec6"
-BASE_URL = "https://api.cricapi.com/v1/"
+# RapidAPI Configuration
+RAPIDAPI_KEY = "cb77671a24msh0dc75b4dba7ae7dp1ce346jsndd7b9cf9d9ff"
+RAPIDAPI_HOST = "cricbuzz-cricket.p.rapidapi.com"
+BASE_URL = "https://cricbuzz-cricket.p.rapidapi.com/"
+
+# Headers for API Requests
+HEADERS = {
+    "X-RapidAPI-Key": RAPIDAPI_KEY,
+    "X-RapidAPI-Host": RAPIDAPI_HOST
+}
 
 # Custom CSS for styling
 st.markdown("""
@@ -46,16 +53,16 @@ def live_updates():
     st.markdown("<h1 class='main-title'>Live Match Updates</h1>", unsafe_allow_html=True)
     
     # Fetch Live Matches
-    response = requests.get(f"{BASE_URL}currentMatches?apikey={API_KEY}")
+    response = requests.get(f"{BASE_URL}matches/v1/recent", headers=HEADERS)
     if response.status_code == 200:
         data = response.json()
-        if 'data' in data:
-            matches = [match for match in data['data'] if "India" in match.get('teams', [])]
+        if 'matchList' in data:
+            matches = [match for match in data['matchList'] if "India" in match.get('team1', {}).get('teamName', '') or "India" in match.get('team2', {}).get('teamName', '')]
             if matches:
                 for match in matches:
-                    st.markdown(f"**{match['name']}**")
+                    st.markdown(f"**{match['seriesName']} - {match['matchDesc']}**")
                     st.write(f"Status: {match.get('status', 'Unknown')}")
-                    st.write(f"Score: {match.get('score', 'N/A')}")
+                    st.write(f"Teams: {match.get('team1', {}).get('teamName', 'N/A')} vs {match.get('team2', {}).get('teamName', 'N/A')}")
                     st.write("---")
             else:
                 st.warning("No live matches found for India.")
@@ -70,11 +77,11 @@ def player_stats():
     
     player_name = st.text_input("Enter Player Name", "Virat Kohli")
     if st.button("Get Stats"):
-        response = requests.get(f"{BASE_URL}playerStats?apikey={API_KEY}&name={player_name}")
+        response = requests.get(f"{BASE_URL}stats/v1/player?name={player_name}", headers=HEADERS)
         if response.status_code == 200:
             data = response.json()
-            if 'data' in data and data['data']:
-                player = data['data'][0]
+            if 'careerSummary' in data:
+                player = data
                 st.write(f"### {player['name']}")
                 stats = {
                     "Matches": player.get("matches", "N/A"),
@@ -85,7 +92,7 @@ def player_stats():
                 df = pd.DataFrame(stats.items(), columns=["Stat", "Value"])
                 st.table(df)
                 
-                # Generate sample data for visualization
+                # Generate graph for player's performance
                 years = list(range(2010, 2024))  # Example years
                 runs = [player.get("runs", 0) // len(years) for _ in years]  # Sample data
                 wickets = [player.get("wickets", 0) // len(years) for _ in years]  # Sample data
@@ -98,7 +105,6 @@ def player_stats():
                 ax.set_title(f"Performance Analysis of {player_name}")
                 ax.legend()
                 st.pyplot(fig)
-                
             else:
                 st.warning("Player not found.")
         else:
