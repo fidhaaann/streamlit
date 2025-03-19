@@ -1,144 +1,128 @@
 import streamlit as st
 import requests
 import pandas as pd
-import matplotlib.pyplot as plt
 
-# Set page config
-st.set_page_config(page_title='Indian Cricket Live Updates', layout='wide')
+# Set Page Configuration
+st.set_page_config(page_title="Indian Cricket Team", layout="wide")
 
-# RapidAPI Configuration
-RAPIDAPI_KEY = "cb77671a24msh0dc75b4dba7ae7dp1ce346jsndd7b9cf9d9ff"
-RAPIDAPI_HOST = "cricbuzz-cricket.p.rapidapi.com"
-BASE_URL = "https://cricbuzz-cricket.p.rapidapi.com/"
-
-# Headers for API Requests
-HEADERS = {
-    "X-RapidAPI-Key": RAPIDAPI_KEY,
-    "X-RapidAPI-Host": RAPIDAPI_HOST
-}
-
-# Custom CSS for styling
-st.markdown("""
-    <style>
-        body {
-            background-color: #ffffff;
-        }
-        .main-title {
-            text-align: center;
-            font-size: 36px;
-            color: #1e90ff;
-            font-weight: bold;
-        }
-        .sub-title {
-            font-size: 24px;
-            color: #1e90ff;
-        }
-        .highlight {
-            background-color: #1e90ff;
-            padding: 10px;
-            border-radius: 10px;
-            color: white;
-            text-align: center;
-            font-weight: bold;
-        }
-    </style>
-""", unsafe_allow_html=True)
+# Free API Key (Replace if needed)
+API_KEY = "INSERT_YOUR_FREE_API_KEY_HERE"  # Replace with your API key
+BASE_URL = "https://api.cricapi.com/v1/"
 
 # Sidebar Navigation
 st.sidebar.title("🏏 Indian Cricket Dashboard")
-page = st.sidebar.radio("Select a page", ["Live Updates", "Player Stats", "Achievements", "Top Performers"])
+page = st.sidebar.radio("Navigate to:", ["Home", "Trophies", "Player Stats", "Live Match Scores"])
 
-# Live Updates Page
-def live_updates():
-    st.markdown("<h1 class='main-title'>Live Match Updates</h1>", unsafe_allow_html=True)
+# Home Page
+if page == "Home":
+    st.markdown(
+        """
+        <style>
+            .home-container {
+                background-image: url('INSERT_IMAGE_PATH_HERE'); 
+                background-size: cover;
+                padding: 50px;
+                color: white;
+                text-align: center;
+            }
+            .content {
+                background-color: rgba(0, 0, 0, 0.7);
+                padding: 20px;
+                border-radius: 10px;
+                display: inline-block;
+            }
+        </style>
+        <div class="home-container">
+            <div class="content">
+                <h1>🇮🇳 Indian Cricket Team</h1>
+                <p>
+                    The Indian cricket team, also known as Team India, is one of the most successful teams in world cricket. 
+                    India has won multiple ICC trophies, including the ICC Cricket World Cup, T20 World Cup, and Champions Trophy. 
+                    With legendary players like Sachin Tendulkar, MS Dhoni, Virat Kohli, and Rohit Sharma, India has dominated the cricketing world for decades.
+                    The team has a rich history of producing world-class batsmen, bowlers, and all-rounders.
+                </p>
+                <p>
+                    India plays in all three formats – Tests, One Day Internationals (ODIs), and T20s. 
+                    The team is known for its passionate fanbase and electrifying performances in home and away matches.
+                </p>
+                <p>
+                    The Board of Control for Cricket in India (BCCI) governs the Indian team and organizes tournaments such as the Indian Premier League (IPL).
+                    India’s cricket journey continues to inspire millions of aspiring cricketers around the world.
+                </p>
+            </div>
+        </div>
+        """,
+        unsafe_allow_html=True,
+    )
+
+# Trophies Page
+elif page == "Trophies":
+    st.title("🏆 ICC Trophies Won by India")
+    trophies = {
+        "🏆 ICC Cricket World Cup (1983, 2011)": "INSERT_IMAGE_PATH_HERE",
+        "🏆 ICC T20 World Cup (2007)": "INSERT_IMAGE_PATH_HERE",
+        "🏆 ICC Champions Trophy (2002, 2013)": "INSERT_IMAGE_PATH_HERE",
+        "🏆 ICC Test Mace (2010, 2011, 2017)": "INSERT_IMAGE_PATH_HERE",
+    }
     
-    # Fetch Live Matches
-    response = requests.get(f"{BASE_URL}matches/v1/recent", headers=HEADERS)
-    if response.status_code == 200:
-        data = response.json()
-        if 'matchList' in data:
-            matches = [match for match in data['matchList'] if "India" in match.get('team1', {}).get('teamName', '') or "India" in match.get('team2', {}).get('teamName', '')]
-            if matches:
-                for match in matches:
-                    st.markdown(f"**{match['seriesName']} - {match['matchDesc']}**")
-                    st.write(f"Status: {match.get('status', 'Unknown')}")
-                    st.write(f"Teams: {match.get('team1', {}).get('teamName', 'N/A')} vs {match.get('team2', {}).get('teamName', 'N/A')}")
-                    st.write("---")
-            else:
-                st.warning("No live matches found for India.")
-        else:
-            st.error("Invalid data format received.")
-    else:
-        st.error("Failed to fetch live updates. Try again later.")
+    for trophy, image in trophies.items():
+        st.markdown(f"### {trophy}")
+        st.image(image, caption=trophy)  # Replace with actual image paths
 
 # Player Stats Page
-def player_stats():
-    st.markdown("<h1 class='main-title'>Player Statistics</h1>", unsafe_allow_html=True)
-    
+elif page == "Player Stats":
+    st.title("📊 Player Statistics")
     player_name = st.text_input("Enter Player Name", "Virat Kohli")
+    
     if st.button("Get Stats"):
-        response = requests.get(f"{BASE_URL}stats/v1/player?name={player_name}", headers=HEADERS)
+        response = requests.get(f"{BASE_URL}players?apikey={API_KEY}&name={player_name}")
         if response.status_code == 200:
             data = response.json()
-            if 'careerSummary' in data:
-                player = data
+            if data["status"] == "success" and "data" in data and data["data"]:
+                player = data["data"][0]  # Taking the first result
                 st.write(f"### {player['name']}")
+                
                 stats = {
                     "Matches": player.get("matches", "N/A"),
                     "Runs": player.get("runs", "N/A"),
                     "Wickets": player.get("wickets", "N/A"),
-                    "Average": player.get("average", "N/A")
+                    "Batting Average": player.get("battingAverage", "N/A"),
+                    "Bowling Average": player.get("bowlingAverage", "N/A"),
                 }
+                
                 df = pd.DataFrame(stats.items(), columns=["Stat", "Value"])
                 st.table(df)
-                
-                # Generate graph for player's performance
-                years = list(range(2010, 2024))  # Example years
-                runs = [player.get("runs", 0) // len(years) for _ in years]  # Sample data
-                wickets = [player.get("wickets", 0) // len(years) for _ in years]  # Sample data
-                
-                fig, ax = plt.subplots()
-                ax.plot(years, runs, label="Runs", marker="o")
-                ax.plot(years, wickets, label="Wickets", marker="s", linestyle="dashed")
-                ax.set_xlabel("Year")
-                ax.set_ylabel("Performance")
-                ax.set_title(f"Performance Analysis of {player_name}")
-                ax.legend()
-                st.pyplot(fig)
             else:
-                st.warning("Player not found.")
+                st.warning("Player not found or no data available.")
         else:
-            st.error("Failed to fetch player stats. Check API response.")
+            st.error("Failed to fetch data. Please check the API key or try again later.")
 
-# Achievements Page
-def achievements():
-    st.markdown("<h1 class='main-title'>Team Achievements</h1>", unsafe_allow_html=True)
-    achievements = ["ICC Cricket World Cup - 1983, 2011", "ICC T20 World Cup - 2007", "Champions Trophy - 2002, 2013"]
-    for trophy in achievements:
-        st.markdown(f"<div class='highlight'>{trophy}</div>", unsafe_allow_html=True)
+# Live Match Scores Page
+elif page == "Live Match Scores":
+    st.title("🏏 Live Scorecard - Indian Team")
     
-    # Image placeholder (Replace path with actual image path)
-    st.image("path_to_trophy_image.jpg", caption="Team India's Achievements")
-
-# Top Performers Page
-def top_performers():
-    st.markdown("<h1 class='main-title'>Top Performers</h1>", unsafe_allow_html=True)
-    
-    data = {"Player": ["Virat Kohli", "Rohit Sharma", "Jasprit Bumrah"], "Performance": ["1200 Runs", "1000 Runs", "50 Wickets"]}
-    df = pd.DataFrame(data)
-    st.table(df)
-    
-    # Image placeholder (Replace path with actual image path)
-    st.image("path_to_top_performers.jpg", caption="Top Performers of India")
-
-# Routing Pages
-if page == "Live Updates":
-    live_updates()
-elif page == "Player Stats":
-    player_stats()
-elif page == "Achievements":
-    achievements()
-elif page == "Top Performers":
-    top_performers()
-
+    response = requests.get(f"{BASE_URL}matches?apikey={API_KEY}")
+    if response.status_code == 200:
+        data = response.json()
+        if data["status"] == "success" and "data" in data:
+            matches = [match for match in data["data"] if "India" in match["teamInfo"][0]["name"] or "India" in match["teamInfo"][1]["name"]]
+            
+            if matches:
+                for match in matches:
+                    st.markdown(f"### {match['name']} - {match['matchType']}")  # Match title
+                    st.write(f"📅 Date: {match['date']}")
+                    st.write(f"🏟 Venue: {match['venue']}")
+                    st.write(f"⏳ Status: {match['status']}")
+                    
+                    if "score" in match:
+                        st.write(f"**{match['teamInfo'][0]['name']}** - {match['score'][0]['runs']}/{match['score'][0]['wickets']} in {match['score'][0]['overs']} overs")
+                        st.write(f"**{match['teamInfo'][1]['name']}** - {match['score'][1]['runs']}/{match['score'][1]['wickets']} in {match['score'][1]['overs']} overs")
+                    
+                    st.write("---")  # Separator for multiple matches
+            else:
+                st.warning("No live matches featuring India at the moment.")
+        else:
+            st.warning("No match data available.")
+    else:
+        st.error("Failed to fetch match data. Please check the API key or try again later.")
 
